@@ -83,6 +83,9 @@ class VisualGridHuntGame:
             self.food_positions.remove(tuple_pos)
             self.score += 20
 
+        if tuple_pos in self.toxic_traps:
+            self.score -= 15
+
         for op in self.opponents:
             move = random.choice(['Up', 'Down', 'Left', 'Right', 'Stay'])
             if move == 'Up' and op[1] < self.height - 1:
@@ -148,6 +151,19 @@ class GridGameGUI:
                 if self.cell_size >= 40 and (x, y) in self.env.walls:
                     self.canvas.create_text(x1 + self.cell_size / 2, y1 + self.cell_size / 2, text="W", fill="white",
                                             font=("Arial", 8, "bold"))
+
+        # Render toxic traps as purple diamond shapes
+        for tx, ty in self.env.toxic_traps:
+            center_x = tx * self.cell_size + self.cell_size / 2
+            center_y = (self.env.height - 1 - ty) * self.cell_size + self.cell_size / 2
+            radius = self.cell_size * 0.3
+            points = [
+                center_x, center_y - radius,
+                center_x + radius, center_y,
+                center_x, center_y + radius,
+                center_x - radius, center_y
+            ]
+            self.canvas.create_polygon(points, fill="#9333ea", outline="#6b21a8", width=2)
 
         for fx, fy in self.env.food_positions:
             offset = self.cell_size * 0.25
