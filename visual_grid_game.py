@@ -10,6 +10,7 @@ class VisualGridHuntGame:
         self.width = width
         self.height = height
         self.agent_pos = [0, 0]  # Starting position (x, y)
+        self.facing = 'Up'
 
         if custom_walls is not None:
             self.walls = set(custom_walls)
@@ -48,21 +49,36 @@ class VisualGridHuntGame:
         self.steps = 0
         self.collision = False
 
+    def get_ahead_position(self) -> tuple:
+        """Return the cell immediately ahead of the agent."""
+        deltas = {
+            'Up': (0, 1),
+            'Down': (0, -1),
+            'Left': (-1, 0),
+            'Right': (1, 0)
+        }
+        dx, dy = deltas[self.facing]
+        return self.agent_pos[0] + dx, self.agent_pos[1] + dy
+
     def get_percept(self) -> dict:
+        ahead = self.get_ahead_position()
+        wall_ahead = (
+            not (0 <= ahead[0] < self.width and 0 <= ahead[1] < self.height)
+            or ahead in self.walls
+        )
+
         return {
-            'agent_pos': list(self.agent_pos),
-            'opponent_positions': [list(op) for op in self.opponents],
-            'smells_food': tuple(self.agent_pos) in self.food_positions,
-            'smells_toxin': tuple(self.agent_pos) in self.toxic_traps,
-            'hit_wall': tuple(self.agent_pos) in self.walls,
-            'collision': self.collision,
-            'score': self.score,
-            'remaining_food': len(self.food_positions)
+            'wall_ahead': wall_ahead,
+            'food_here': tuple(self.agent_pos) in self.food_positions,
+            'smells_toxin': tuple(self.agent_pos) in self.toxic_traps
         }
 
     def execute_action(self, action: str):
         self.steps += 1
         new_pos = list(self.agent_pos)
+
+        if action in ('Up', 'Down', 'Left', 'Right'):
+            self.facing = action
 
         if action == 'Up':
             new_pos[1] = min(self.height - 1, new_pos[1] + 1)
