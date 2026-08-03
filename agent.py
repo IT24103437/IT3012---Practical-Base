@@ -10,3 +10,15 @@ class GreedyGridAgent:
         pos = percept['agent_pos']
         # Simple heuristic or fallback random sweep
         return random.choice(self.actions_pool)
+
+
+class SimpleReflexAgent:
+    """React to the current percept using condition-action rules only."""
+
+    def sense_and_act(self, percept: dict) -> str:
+        if percept['food_here']:
+            return 'Suck'
+        elif percept['wall_ahead']:
+            return 'Left'
+        else:
+            return 'Up'
