@@ -2,7 +2,7 @@
 import random
 import tkinter as tk
 
-from agent import SimpleReflexAgent
+from agent import ModelBasedAgent
 
 
 class VisualGridHuntGame:
@@ -129,7 +129,7 @@ class GridGameGUI:
     def __init__(self, root, width=10, height=10, num_food=12, num_opponents=2, walls=None):
         self.root = root
         self.root.title("IT3012 - Scalable Multi-Agent Grid Hunt")
-        self.agent = SimpleReflexAgent()
+        self.agent = ModelBasedAgent()
 
         self.env = VisualGridHuntGame(width=width, height=height, num_food=num_food, num_opponents=num_opponents,
                                       custom_walls=walls)
