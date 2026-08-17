@@ -120,6 +120,51 @@ class SearchAgent:
         'Right': (1, 0)
     }
 
+    def __init__(self):
+        self.plan = []
+        self.active_algo = 'BFS'
+        self.current_pos = (0, 0)
+
+    def sense_and_act(self, percept: dict) -> str:
+        if not self.plan:
+            self.plan = self.make_plan(percept)
+
+        if not self.plan:
+            return 'Stay'
+
+        action = self.plan.pop(0)
+        dx, dy = self.DELTAS[action]
+        self.current_pos = self.current_pos[0] + dx, self.current_pos[1] + dy
+        return action
+
+    def make_plan(self, percept: dict) -> list:
+        """Build a complete route to the closest reachable food pellet."""
+        food_positions = [tuple(position) for position in percept['all_food']]
+        if not food_positions:
+            return []
+
+        algorithms = {
+            'BFS': self.bfs_search,
+            'DFS': self.dfs_search,
+            'UCS': self.ucs_search
+        }
+        algorithm_name = self.active_algo.upper()
+        if algorithm_name not in algorithms:
+            raise ValueError(f"Unknown search algorithm: {self.active_algo}")
+
+        ordered_goals = sorted(
+            food_positions,
+            key=lambda goal: abs(goal[0] - self.current_pos[0]) + abs(goal[1] - self.current_pos[1])
+        )
+
+        search = algorithms[algorithm_name]
+        for goal in ordered_goals:
+            plan = search(self.current_pos, goal, percept['walls'], percept['grid_size'])
+            if plan or goal == self.current_pos:
+                return plan
+
+        return []
+
     def expand(self, state, walls, grid_size):
         """Yield every legal action, successor state, and step cost."""
         width, height = grid_size
