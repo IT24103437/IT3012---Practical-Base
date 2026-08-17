@@ -1,4 +1,8 @@
 # agent.py
+import heapq
+from collections import deque
+
+
 class GreedyGridAgent:
     """A simple agent that tries to move around systematically to clear the grid."""
 
@@ -104,3 +108,87 @@ class ModelBasedAgent:
         self.last_action = action
         self.action_history.append(action)
         return action
+
+
+class SearchAgent:
+    """Find offline plans using uninformed graph-search algorithms."""
+
+    DELTAS = {
+        'Up': (0, 1),
+        'Down': (0, -1),
+        'Left': (-1, 0),
+        'Right': (1, 0)
+    }
+
+    def expand(self, state, walls, grid_size):
+        """Yield every legal action, successor state, and step cost."""
+        width, height = grid_size
+        x, y = state
+
+        for action, (dx, dy) in self.DELTAS.items():
+            next_state = (x + dx, y + dy)
+            inside_grid = 0 <= next_state[0] < width and 0 <= next_state[1] < height
+            if inside_grid and next_state not in walls:
+                yield action, next_state, 1
+
+    def bfs_search(self, start, goal, walls, grid_size) -> list:
+        """Use a FIFO frontier to find the shallowest path."""
+        walls = set(walls)
+        frontier = deque([(start, [])])
+        reached = {start}
+
+        while frontier:
+            state, path = frontier.popleft()
+            if state == goal:
+                return path
+
+            for action, next_state, _ in self.expand(state, walls, grid_size):
+                if next_state not in reached:
+                    reached.add(next_state)
+                    frontier.append((next_state, path + [action]))
+
+        return []
+
+    def dfs_search(self, start, goal, walls, grid_size) -> list:
+        """Use a LIFO frontier to explore the deepest path first."""
+        walls = set(walls)
+        frontier = [(start, [])]
+        reached = {start}
+
+        while frontier:
+            state, path = frontier.pop()
+            if state == goal:
+                return path
+
+            for action, next_state, _ in self.expand(state, walls, grid_size):
+                if next_state not in reached:
+                    reached.add(next_state)
+                    frontier.append((next_state, path + [action]))
+
+        return []
+
+    def ucs_search(self, start, goal, walls, grid_size) -> list:
+        """Use a priority frontier ordered by total path cost g(n)."""
+        walls = set(walls)
+        frontier = [(0, 0, start, [])]
+        best_cost = {start: 0}
+        reached = set()
+        tie_breaker = 0
+
+        while frontier:
+            cost, _, state, path = heapq.heappop(frontier)
+            if state in reached:
+                continue
+            reached.add(state)
+
+            if state == goal:
+                return path
+
+            for action, next_state, step_cost in self.expand(state, walls, grid_size):
+                new_cost = cost + step_cost
+                if next_state not in reached and new_cost < best_cost.get(next_state, float('inf')):
+                    best_cost[next_state] = new_cost
+                    tie_breaker += 1
+                    heapq.heappush(frontier, (new_cost, tie_breaker, next_state, path + [action]))
+
+        return []
