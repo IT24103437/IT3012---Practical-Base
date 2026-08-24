@@ -123,7 +123,7 @@ class SearchAgent:
 
     def __init__(self):
         self.plan = []
-        self.active_algo = 'BFS'
+        self.active_algo = 'AStar'
         self.current_pos = (0, 0)
 
     def manhattan_distance(self, pos, goal) -> int:
@@ -152,13 +152,15 @@ class SearchAgent:
         if not food_positions:
             return []
 
-        algorithms = {
-            'BFS': self.bfs_search,
-            'DFS': self.dfs_search,
-            'UCS': self.ucs_search
-        }
-        algorithm_name = self.active_algo.upper()
-        if algorithm_name not in algorithms:
+        if self.active_algo == 'BFS':
+            search = self.bfs_search
+        elif self.active_algo == 'DFS':
+            search = self.dfs_search
+        elif self.active_algo == 'UCS':
+            search = self.ucs_search
+        elif self.active_algo == 'AStar':
+            search = self.astar_search
+        else:
             raise ValueError(f"Unknown search algorithm: {self.active_algo}")
 
         ordered_goals = sorted(
@@ -166,7 +168,6 @@ class SearchAgent:
             key=lambda goal: abs(goal[0] - self.current_pos[0]) + abs(goal[1] - self.current_pos[1])
         )
 
-        search = algorithms[algorithm_name]
         for goal in ordered_goals:
             plan = search(self.current_pos, goal, percept['walls'], percept['grid_size'])
             if plan or goal == self.current_pos:
