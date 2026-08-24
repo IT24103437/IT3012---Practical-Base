@@ -246,3 +246,47 @@ class SearchAgent:
                     heapq.heappush(frontier, (new_cost, tie_breaker, next_state, path + [action]))
 
         return []
+
+    def astar_search(self, start_pos, goal_pos, walls, grid_size, heuristic_type='manhattan') -> list:
+        """Find a path using the combined priority f(n) = g(n) + h(n)."""
+        heuristic_name = heuristic_type.lower()
+        if heuristic_name == 'manhattan':
+            heuristic = self.manhattan_distance
+        elif heuristic_name == 'euclidean':
+            heuristic = self.euclidean_distance
+        else:
+            raise ValueError("heuristic_type must be 'manhattan' or 'euclidean'")
+
+        walls = set(walls)
+        reached_states = set()
+        best_cost = {start_pos: 0}
+
+        start_g = 0
+        start_h = heuristic(start_pos, goal_pos)
+        frontier = [(start_g + start_h, start_g, start_pos, [])]
+
+        while frontier:
+            _, current_g, current_pos, path_taken = heapq.heappop(frontier)
+            if current_pos in reached_states:
+                continue
+
+            if current_pos == goal_pos:
+                return path_taken
+
+            reached_states.add(current_pos)
+
+            for action, neighbor, step_cost in self.expand(current_pos, walls, grid_size):
+                if neighbor in reached_states:
+                    continue
+
+                new_g = current_g + step_cost
+                if new_g < best_cost.get(neighbor, float('inf')):
+                    best_cost[neighbor] = new_g
+                    new_h = heuristic(neighbor, goal_pos)
+                    new_f = new_g + new_h
+                    heapq.heappush(
+                        frontier,
+                        (new_f, new_g, neighbor, path_taken + [action])
+                    )
+
+        return []
