@@ -1,5 +1,6 @@
 # agent.py
 import heapq
+import math
 from collections import deque
 
 
@@ -124,6 +125,14 @@ class SearchAgent:
         self.plan = []
         self.active_algo = 'BFS'
         self.current_pos = (0, 0)
+
+    def manhattan_distance(self, pos, goal) -> int:
+        """Return the four-way grid distance from pos to goal."""
+        return abs(pos[0] - goal[0]) + abs(pos[1] - goal[1])
+
+    def euclidean_distance(self, pos, goal) -> float:
+        """Return the straight-line distance from pos to goal."""
+        return math.sqrt((pos[0] - goal[0]) ** 2 + (pos[1] - goal[1]) ** 2)
 
     def sense_and_act(self, percept: dict) -> str:
         if not self.plan:
