@@ -3,6 +3,8 @@ import heapq
 import math
 from collections import deque
 
+from logic_engine import KnowledgeBase
+
 
 class GreedyGridAgent:
     """A simple agent that tries to move around systematically to clear the grid."""
@@ -125,6 +127,9 @@ class SearchAgent:
         self.plan = []
         self.active_algo = 'AStar'
         self.current_pos = (0, 0)
+        self.kb = KnowledgeBase()
+        self.kb.tell_rule(['TargetVisible', 'HasDust'], 'SafeToEngage')
+        self.kb.tell_rule(['SafeToEngage', 'BloodseekerMissing'], 'Retreat')
 
     def manhattan_distance(self, pos, goal) -> int:
         """Return the four-way grid distance from pos to goal."""
