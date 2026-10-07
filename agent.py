@@ -253,8 +253,12 @@ class SearchAgent:
 
         return []
 
-    def astar_search(self, start_pos, goal_pos, walls, grid_size, heuristic_type='manhattan') -> list:
+    def astar_search(self, start_pos, goal_pos, walls, grid_size,
+                     heuristic_type='manhattan', tile_facts=None) -> list:
         """Find a path using the combined priority f(n) = g(n) + h(n)."""
+        if tile_facts is None:
+            tile_facts = {}
+
         heuristic_name = heuristic_type.lower()
         if heuristic_name == 'manhattan':
             heuristic = self.manhattan_distance
@@ -283,6 +287,13 @@ class SearchAgent:
 
             for action, neighbor, step_cost in self.expand(current_pos, walls, grid_size):
                 if neighbor in reached_states:
+                    continue
+
+                self.kb.clear_facts()
+                for fact in tile_facts.get(neighbor, []):
+                    self.kb.tell_fact(fact)
+                self.kb.forward_chain()
+                if 'Retreat' in self.kb.facts:
                     continue
 
                 new_g = current_g + step_cost
