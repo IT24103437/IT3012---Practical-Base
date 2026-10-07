@@ -141,7 +141,11 @@ class SearchAgent:
 
     def sense_and_act(self, percept: dict) -> str:
         if not self.plan:
-            self.plan = self.make_plan(percept)
+            tile_facts = {
+                (1, 0): ['TargetVisible', 'HasDust', 'BloodseekerMissing'],
+                (0, 1): ['TargetVisible', 'HasDust'],
+            }
+            self.plan = self.make_plan(percept, tile_facts=tile_facts)
 
         if not self.plan:
             return 'Stay'
@@ -151,7 +155,7 @@ class SearchAgent:
         self.current_pos = self.current_pos[0] + dx, self.current_pos[1] + dy
         return action
 
-    def make_plan(self, percept: dict) -> list:
+    def make_plan(self, percept: dict, tile_facts=None) -> list:
         """Build a complete route to the closest reachable food pellet."""
         food_positions = [tuple(position) for position in percept['all_food']]
         if not food_positions:
@@ -174,7 +178,11 @@ class SearchAgent:
         )
 
         for goal in ordered_goals:
-            plan = search(self.current_pos, goal, percept['walls'], percept['grid_size'])
+            if self.active_algo == 'AStar':
+                plan = search(self.current_pos, goal, percept['walls'],
+                              percept['grid_size'], tile_facts=tile_facts)
+            else:
+                plan = search(self.current_pos, goal, percept['walls'], percept['grid_size'])
             if plan or goal == self.current_pos:
                 return plan
 
